@@ -65,6 +65,7 @@ public class DocumentWriterFactoryTest {
     public void testVersionEncodingAndNoTopLevelElement() {
         StringWriter writer = new StringWriter();
         document(writer).version(1.0).encoding("UTF-8").finish();
+        assertEquals(0, 1);
     }
 
     @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "Trying to output second root.")

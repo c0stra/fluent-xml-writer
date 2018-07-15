@@ -5,10 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>foundation.fluent.api</groupId>
-    <artifactId>fluent-xml-writer</artifactId>
+    <artifactId>fluent-xml-writer-project</artifactId>
+    <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
+    <modules>
+        <module>fluent-xml-writer</module>
+        <module>fluent-xml-writer-tests</module>
+    </modules>
 
-    <name>Fluent XML writer.</name>
+    <name>Fluent XML writer project</name>
     <description>
         Module provides annotation based Java language extensions, that helps identifying missing methods needed to end
         a chain (sentence) using fluent API already at compile time.
@@ -45,15 +50,6 @@
         <testng.version>6.14.3</testng.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${testng.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 
 
     <distributionManagement>
@@ -141,7 +137,9 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.0</version>
                 <configuration>
                     <systemPropertyVariables>
                         <project.name>${project.name}</project.name>
