@@ -29,47 +29,36 @@
 
 package foundation.fluent.api.xml;
 
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.io.StringWriter;
-import java.io.Writer;
+import java.util.function.Consumer;
 
 import static foundation.fluent.api.xml.DocumentWriterFactory.*;
 import static org.testng.Assert.assertEquals;
 
 public class DocumentWriterFactoryTest {
 
-    @Test
-    public void testTopLevelElement() {
-        StringWriter writer = new StringWriter();
-        document(writer).open("element").close();
-        assertEquals(writer.toString(), "<element/>");
+    private Object[] requirement(Consumer<DocumentWriter> actual, String expected) {
+        return new Object[] {actual, expected};
     }
 
-    @Test
-    public void testVersionAndTopLevelElement() {
-        StringWriter writer = new StringWriter();
-        document(writer).version(1.0).open("element").close();
-        assertEquals(writer.toString(), "<?xml version='1.0'?><element/>");
+    @DataProvider
+    public Object[][] data() {
+        return new Object[][] {
+                requirement(w -> w.open("element").close(), "<element/>"),
+                requirement(w -> w.version(1.0).open("element").close(), "<?xml version='1.0'?><element/>"),
+                requirement(w -> w.encoding("UTF-8").open("element").close(), "<?xml encoding='UTF-8'?><element/>"),
+                requirement(w -> w.version(1.0).encoding("UTF-8").open("element").finish(), "<?xml version='1.0' encoding='UTF-8'?><element/>")
+        };
     }
 
-    @Test
-    public void testEncodingAndTopLevelElement() {
+    @Test(dataProvider = "data")
+    public void test(Consumer<DocumentWriter> actual, String expected) {
         StringWriter writer = new StringWriter();
-        document(writer).encoding("UTF-8").open("element").close();
-        assertEquals(writer.toString(), "<?xml encoding='UTF-8'?><element/>");
-    }
-
-    @Test
-    public void testVersionEncodingAndTopLevelElement() {
-        StringWriter writer = new StringWriter();
-        document(writer).version(1.0).encoding("UTF-8").open("element").finish();
-        assertEquals(writer.toString(), "<?xml version='1.0' encoding='UTF-8'?><element/>");
+        actual.accept(document(writer));
+        assertEquals(writer.toString(), expected);
     }
 
     @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "No root element created.")
@@ -83,7 +72,6 @@ public class DocumentWriterFactoryTest {
         StringWriter writer = new StringWriter();
         document(writer).version(1.0).encoding("UTF-8").open("root").close().open("root").finish();
     }
-
 
     @Test
     public void testContent() {
@@ -106,56 +94,6 @@ public class DocumentWriterFactoryTest {
         tag.open("two").attribute("b", "v").text("2");
         tag.finish();
         assertEquals(writer.toString(), "<tag><one a='u'>1</one><two b='v'>2</two></tag>");
-    }
-
-    @Test(invocationCount = 5, enabled = false)
-    public void testEscaping() throws IOException {
-        //StringWriter writer = new StringWriter();
-        Writer writer = new FileWriter("output.xml");
-        ContentWriter<DocumentWriter> cdata = document(writer)
-                .version(1.0).encoding("UTF-8")
-                .open("element").attribute("a", "b&").xmlns("http://my/uri")
-                .text("a\u0001ha< >")
-                .cdata("uuu")
-                .cdata(" f");
-        for(int i = 0; i < 1000000; i++) {
-            cdata                .open("another").attribute("counter", String.valueOf(Math.random())).attribute("ouha", "h & a")
-                    .text("fgdsfg ' & > <     ")
-                    .cdata("fdsf \u0010 fdsff \u0002")
-                    .open("dalsi").attribute("ua", "au")
-                    .close()
-                    .close();
-
-        }
-                cdata.close().finish();
-
-    }
-
-
-    @Test(invocationCount = 5, enabled = false)
-    public void testWriter() throws IOException, XMLStreamException {
-        XMLStreamWriter writer = XMLOutputFactory.newFactory().createXMLStreamWriter(new FileWriter("output2.xml"));
-        writer.writeStartDocument("UTF-8", "1.0");
-        writer.writeStartElement("element");
-        writer.writeAttribute("a", "b&");
-        writer.writeNamespace("ns", "http://my/uri");
-        writer.writeCharacters("aha < >");
-        writer.writeCData("uuu");
-        writer.writeCData(" f");
-
-        for(int i = 0; i < 1000000; i++) {
-            writer.writeStartElement("another");
-            writer.writeAttribute("counter", String.valueOf(Math.random()));
-            writer.writeAttribute("ouha", "h & a");
-            writer.writeCharacters("fgdsfg ' & > <     ");
-            writer.writeCharacters("fdsf \u0010 fdsff \u0002");
-            writer.writeStartElement("dalsi");
-            writer.writeAttribute("ua", "au");
-            writer.writeEndElement();
-            writer.writeEndElement();
-        }
-
-        writer.close();
     }
 
 }

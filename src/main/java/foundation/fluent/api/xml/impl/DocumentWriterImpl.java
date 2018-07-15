@@ -38,15 +38,14 @@ import java.net.URI;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static foundation.fluent.api.xml.impl.DocumentWriterImpl.DocumentState.EMPTY;
-import static foundation.fluent.api.xml.impl.DocumentWriterImpl.DocumentState.OPEN;
-import static foundation.fluent.api.xml.impl.DocumentWriterImpl.DocumentState.XML;
+import static foundation.fluent.api.xml.impl.DocumentWriterImpl.DocumentState.*;
 import static foundation.fluent.api.xml.impl.DocumentWriterImpl.ElementState.*;
 import static java.util.Objects.nonNull;
 
 public final class DocumentWriterImpl implements DocumentWriter, Supplier<DocumentWriter> {
 
-    enum DocumentState { EMPTY, XML, CONTENT, OPEN, CLOSED }
+    enum DocumentState {EMPTY, XML, PREFIX, OPEN, FINISHED}
+    enum ElementState {OPENING, CONTENT, CDATA, CLOSED}
 
     private final PrintWriter writer;
     private final PrintWriter escapingWriter;
@@ -83,8 +82,8 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
     private void toContent() {
         switch (state) {
             case XML: writer.write("?>");
-            case EMPTY: state = DocumentState.CONTENT;
-            case CONTENT: return;
+            case EMPTY: state = PREFIX;
+            case PREFIX: return;
             default: throw new IllegalStateException("Trying to output second root.");
         }
     }
@@ -124,7 +123,7 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
                 throw new IllegalStateException("No root element created.");
             case OPEN:
                 child.close();
-            case CLOSED:
+            case FINISHED:
                 escapingWriter.close();
         }
     }
@@ -132,11 +131,9 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
     @Override
     public DocumentWriter get() {
         child = null;
-        state = DocumentState.CLOSED;
+        state = FINISHED;
         return this;
     }
-
-    public enum ElementState {OPENING, CONTENT, CDATA, CLOSED}
 
     private final class ElementWriterImpl<P extends WriterBase> implements ElementWriter<P>, Supplier<ContentWriter<P>> {
 
