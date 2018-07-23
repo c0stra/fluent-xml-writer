@@ -1,4 +1,6 @@
 # Fluent XML writer
+[![Build Status](https://travis-ci.org/c0stra/fluent-xml-writer.svg?branch=master)](https://travis-ci.org/c0stra/fluent-xml-writer)
+
 Fluent, hierarchical, XML writer is a tool that should make writing XML data
 programmatically convenient and less error prone.
 
