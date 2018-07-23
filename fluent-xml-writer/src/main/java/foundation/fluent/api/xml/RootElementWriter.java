@@ -32,20 +32,31 @@ package foundation.fluent.api.xml;
 import java.net.URI;
 
 /**
- * Writer of any element within the XML hierarchy, except the root element.
+ * Writer of the root element.
  */
-public interface ElementWriter extends RootElementWriter {
+public interface RootElementWriter extends ContentWriter {
 
-    @Override
-    ElementWriter xmlns(String name);
+    /**
+     * Write XML namespace of the current tag.
+     * @param uri Namespace URI.
+     * @return Writer of other tag attributes.
+     */
+    RootElementWriter xmlns(String uri);
 
-    @Override
-    ElementWriter xmlns(String prefix, URI uri);
+    /**
+     * Write XML namespace of the current tag.
+     * @param prefix Namespace prefix.
+     * @param uri Namespace URI.
+     * @return Writer of other tag attributes.
+     */
+    RootElementWriter xmlns(String prefix, URI uri);
 
-    @Override
-    ElementWriter attribute(String name, String value);
-
-    @Override
-    ContentWriter end();
+    /**
+     * Write tag attribute.
+     * @param name Attribute name.
+     * @param value Attribute value.
+     * @return Writer of other tag attributes.
+     */
+    RootElementWriter attribute(String name, String value);
 
 }

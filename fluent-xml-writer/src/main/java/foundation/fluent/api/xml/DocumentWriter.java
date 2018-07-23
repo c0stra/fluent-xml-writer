@@ -29,20 +29,55 @@
 
 package foundation.fluent.api.xml;
 
-public interface DocumentWriter extends WriterBase {
+/**
+ * Writer of the top level document information.
+ */
+public interface DocumentWriter extends DocumentFinisher {
 
+    /**
+     * Write XML document version.
+     * @param version document version.
+     * @return Document writer to continue with its definition.
+     */
     DocumentWriter version(String version);
 
+    /**
+     * Write XML document version.
+     * @param version document version.
+     * @return Document writer to continue with its definition.
+     */
     default DocumentWriter version(double version) {
         return version(String.valueOf(version));
     }
 
+    /**
+     * Write XML document encoding.
+     * @param encoding document encoding.
+     * @return Document writer to continue with its definition.
+     */
     DocumentWriter encoding(String encoding);
 
+    /**
+     * Write XML processing instruction.
+     * @param name Processing instruction name (e.g. xml-stylesheet).
+     * @param content Content of the processing instruction tag.
+     * @return Document writer to continue with its definition.
+     */
     DocumentWriter instruction(String name, String content);
 
-    ElementWriter<DocumentWriter> open(String tag);
+    /**
+     * Start writing opening tag with provided tag name.
+     * @param name Tag name.
+     * @return Writer of element content including it's attributes.
+     */
+    RootElementWriter tag(String name);
 
-    ElementWriter<DocumentWriter> open(String nsPrefix, String tag);
+    /**
+     * Start writing opening tag with provided XML namespace prefix and tag name.
+     * @param nsPrefix XML namespace prefix.
+     * @param name Tag name.
+     * @return Writer of element content including it's attributes.
+     */
+    RootElementWriter tag(String nsPrefix, String name);
 
 }

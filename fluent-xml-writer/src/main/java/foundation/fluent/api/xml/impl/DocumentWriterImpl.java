@@ -30,6 +30,7 @@
 package foundation.fluent.api.xml.impl;
 
 import foundation.fluent.api.xml.*;
+import foundation.fluent.api.xml.writer.CDataWriter;
 import foundation.fluent.api.xml.writer.EscapingWriter;
 
 import java.io.PrintWriter;
@@ -42,7 +43,7 @@ import static foundation.fluent.api.xml.impl.DocumentWriterImpl.DocumentState.*;
 import static foundation.fluent.api.xml.impl.DocumentWriterImpl.ElementState.*;
 import static java.util.Objects.nonNull;
 
-public final class DocumentWriterImpl implements DocumentWriter, Supplier<DocumentWriter> {
+public final class DocumentWriterImpl implements DocumentWriter, Supplier<DocumentFinisher> {
 
     enum DocumentState {EMPTY, XML, PREFIX, OPEN, FINISHED}
     enum ElementState {OPENING, CONTENT, CDATA, CLOSED}
@@ -50,11 +51,11 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
     private final PrintWriter writer;
     private final PrintWriter escapingWriter;
     private final PrintWriter cdataWriter;
-    private ElementWriter<DocumentWriter> child;
+    private RootElementWriter child;
     private DocumentState state = EMPTY;
 
     public static DocumentWriter documentBuilder(Writer writer) {
-        Writer cdataWriter = new EscapingWriter(writer);
+        Writer cdataWriter = new CDataWriter(writer);
         return new DocumentWriterImpl(new PrintWriter(writer), new PrintWriter(cdataWriter), new PrintWriter(new EscapingWriter(cdataWriter)));
     }
 
@@ -105,26 +106,23 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
     }
 
     @Override
-    public ElementWriter<DocumentWriter> open(String tag) {
+    public RootElementWriter tag(String tag) {
         toContent();
         state = OPEN;
-        return child = new ElementWriterImpl<>(tag, this);
+        return child = new RootElementWriterImpl(tag, this);
     }
 
     @Override
-    public ElementWriter<DocumentWriter> open(String nsPrefix, String tag) {
-        return open(nsPrefix + ':' + tag);
+    public RootElementWriter tag(String nsPrefix, String tag) {
+        return tag(nsPrefix + ':' + tag);
     }
 
     @Override
-    public void finish() {
+    public void close() {
         switch (state) {
-            default:
-                throw new IllegalStateException("No root element created.");
-            case OPEN:
-                child.close();
-            case FINISHED:
-                escapingWriter.close();
+            default: throw new IllegalStateException("No root element created.");
+            case OPEN: child.end();
+            case FINISHED: escapingWriter.close();
         }
     }
 
@@ -135,55 +133,55 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
         return this;
     }
 
-    private final class ElementWriterImpl<P extends WriterBase> implements ElementWriter<P>, Supplier<ContentWriter<P>> {
+    private class RootElementWriterImpl implements RootElementWriter, Supplier<ContentWriter> {
 
         private final String tag;
-        private final Supplier<P> parent;
-        private ElementWriter<ContentWriter<P>> child;
+        private final Supplier<? extends DocumentFinisher> parent;
+        private ElementWriter child;
         private ElementState state = OPENING;
 
-        private ElementWriterImpl(String tag, Supplier<P> parent) {
+        private RootElementWriterImpl(String tag, Supplier<? extends DocumentFinisher> parent) {
             this.tag = tag;
             this.parent = parent;
             writer.write("<" + tag);
         }
 
-        @Override public ElementWriter<P> xmlns(String name) {
+        @Override public RootElementWriter xmlns(String name) {
             return attribute("xmlns", name);
         }
 
-        @Override public ElementWriter<P> xmlns(String prefix, URI uri) {
+        @Override public RootElementWriter xmlns(String prefix, URI uri) {
             return attribute("xmlns:" + prefix, String.valueOf(uri));
         }
 
-        @Override public ElementWriter<P> attribute(String name, String value) {
+        @Override public RootElementWriter attribute(String name, String value) {
             writer.write(" " + name + "='");
             escapingWriter.write(value);
             writer.write('\'');
             return this;
         }
 
-        @Override public ContentWriter<P> instruction(String name, String content) {
+        @Override public ContentWriter instruction(String name, String content) {
             toContent();
             return this;
         }
 
-        @Override public ElementWriter<ContentWriter<P>> open(String tag) {
+        @Override public ElementWriter tag(String tag) {
             toContent();
-            return child = new ElementWriterImpl<>(tag, this);
+            return child = new ElementWriterImpl(tag, this);
         }
 
-        @Override public ElementWriter<ContentWriter<P>> open(String nsPrefix, String tag) {
-            return open(nsPrefix + ':' + tag);
+        @Override public ElementWriter tag(String nsPrefix, String tag) {
+            return tag(nsPrefix + ':' + tag);
         }
 
-        @Override public ContentWriter<P> text(String content) {
+        @Override public ContentWriter text(String content) {
             toContent();
             escapingWriter.write(content);
             return this;
         }
 
-        @Override public ContentWriter<P> cdata(String content) {
+        @Override public ContentWriter cdata(String content) {
             switch (state) {
                 case OPENING:
                     writer.write("/><!CDATA[");
@@ -201,11 +199,11 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
             return this;
         }
 
-        @Override public ContentWriter<P> fragment(Consumer<Writer> consumer) {
+        @Override public ContentWriter fragment(Consumer<Writer> consumer) {
             return this;
         }
 
-        @Override public P close() {
+        @Override public DocumentFinisher end() {
             switch (state) {
                 case OPENING:
                     writer.write("/>");
@@ -224,12 +222,12 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
             return parent.get();
         }
 
-        @Override public void finish() {
-            close().finish();
+        @Override public void close() {
+            end().close();
         }
 
         private void closeChild() {
-            if(nonNull(child)) child.close();
+            if(nonNull(child)) child.end();
         }
 
         private void toContent() {
@@ -243,10 +241,46 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
         }
 
         @Override
-        public ContentWriter<P> get() {
+        public ContentWriter get() {
             child = null;
             return this;
         }
+    }
+
+
+    public class ElementWriterImpl extends RootElementWriterImpl implements ElementWriter {
+
+        private final Supplier<ContentWriter> parent;
+
+        private ElementWriterImpl(String tag, Supplier<ContentWriter> parent) {
+            super(tag, parent);
+            this.parent = parent;
+        }
+
+        @Override
+        public ElementWriter xmlns(String name) {
+            super.xmlns(name);
+            return this;
+        }
+
+        @Override
+        public ElementWriter xmlns(String prefix, URI uri) {
+            super.xmlns(prefix, uri);
+            return this;
+        }
+
+        @Override
+        public ElementWriter attribute(String name, String value) {
+            super.attribute(name, value);
+            return this;
+        }
+
+        @Override
+        public ContentWriter end() {
+            super.end();
+            return parent.get();
+        }
+
     }
 
 }

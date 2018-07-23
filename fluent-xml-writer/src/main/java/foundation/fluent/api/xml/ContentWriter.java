@@ -32,20 +32,54 @@ package foundation.fluent.api.xml;
 import java.io.Writer;
 import java.util.function.Consumer;
 
-public interface ContentWriter<P extends WriterBase> extends WriterBase {
+/**
+ * Writer of the XML tag content.
+ */
+public interface ContentWriter extends DocumentFinisher {
 
-    ContentWriter<P> instruction(String name, String content);
+    /**
+     * Write XML processing instruction.
+     * @param name Processing instruction name (e.g. xml-stylesheet).
+     * @param content Content of the processing instruction tag.
+     * @return Writer to continue writing additional content after the processing instruction.
+     */
+    ContentWriter instruction(String name, String content);
 
-    ElementWriter<ContentWriter<P>> open(String tag);
+    /**
+     * Start writing opening tag with provided tag name.
+     * @param name Tag name.
+     * @return Writer of element content including it's attributes.
+     */
+    ElementWriter tag(String name);
 
-    ElementWriter<ContentWriter<P>> open(String nsPrefix, String tag);
+    /**
+     * Start writing opening tag with provided XML namespace prefix and tag name.
+     * @param nsPrefix XML namespace prefix.
+     * @param name Tag name.
+     * @return Writer of element content including it's attributes.
+     */
+    ElementWriter tag(String nsPrefix, String name);
 
-    ContentWriter<P> text(String content);
+    /**
+     * Write text content of the currently opened tag.
+     * @param content Text content to be written.
+     * @return Writer to continue writing additional content after the processing instruction.
+     */
+    ContentWriter text(String content);
 
-    ContentWriter<P> cdata(String content);
+    /**
+     * Write CDATA content of the currently opened tag.
+     * @param content CDATA content to be written.
+     * @return Writer to continue writing additional content after the processing instruction.
+     */
+    ContentWriter cdata(String content);
 
-    ContentWriter<P> fragment(Consumer<Writer> consumer);
+    ContentWriter fragment(Consumer<Writer> consumer);
 
-    P close();
+    /**
+     * End currently opened tag.
+     * @return Parent content writer.
+     */
+    DocumentFinisher end();
 
 }

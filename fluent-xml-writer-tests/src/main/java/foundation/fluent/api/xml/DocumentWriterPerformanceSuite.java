@@ -45,22 +45,22 @@ public class DocumentWriterPerformanceSuite {
     @Test(invocationCount = 5, enabled = false)
     public void testEscaping() throws IOException {
         Writer writer = new FileWriter("output.xml");
-        ContentWriter<DocumentWriter> cdata = document(writer)
+        ContentWriter cdata = document(writer)
                 .version(1.0).encoding("UTF-8")
-                .open("element").attribute("a", "b&").xmlns("http://my/uri")
+                .tag("element").attribute("a", "b&").xmlns("http://my/uri")
                 .text("a\u0001ha< >")
                 .cdata("uuu")
                 .cdata(" f");
         for(int i = 0; i < 1000000; i++) {
-            cdata.open("another").attribute("counter", String.valueOf(Math.random())).attribute("ouha", "h & a")
+            cdata.tag("another").attribute("counter", String.valueOf(Math.random())).attribute("ouha", "h & a")
                     .text("fgdsfg ' & > <     ")
                     .cdata("fdsf \u0010 fdsff \u0002")
-                    .open("dalsi").attribute("ua", "au")
-                    .close()
-                    .close();
+                    .tag("dalsi").attribute("ua", "au")
+                    .end()
+                    .end();
 
         }
-        cdata.close().finish();
+        cdata.end().close();
 
     }
 

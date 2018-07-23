@@ -29,8 +29,16 @@
 
 package foundation.fluent.api.xml;
 
-public interface WriterBase {
+/**
+ * Finisher of the XML document.
+ */
+public interface DocumentFinisher {
 
-    void finish();
+    /**
+     * Close the XML document.
+     *  1. Close all opened tags
+     *  2. Close underlying output stream.
+     */
+    void close();
 
 }

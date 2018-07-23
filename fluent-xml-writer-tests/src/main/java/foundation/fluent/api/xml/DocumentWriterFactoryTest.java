@@ -47,10 +47,45 @@ public class DocumentWriterFactoryTest {
     @DataProvider
     public Object[][] data() {
         return new Object[][] {
-                requirement(w -> w.open("element").close(), "<element/>"),
-                requirement(w -> w.version(1.0).open("element").close(), "<?xml version='1.0'?><element/>"),
-                requirement(w -> w.encoding("UTF-8").open("element").close(), "<?xml encoding='UTF-8'?><element/>"),
-                requirement(w -> w.version(1.0).encoding("UTF-8").open("element").finish(), "<?xml version='1.0' encoding='UTF-8'?><element/>")
+                requirement(
+                        w -> w.tag("element").end(),
+                        "<element/>"
+                ),
+
+                requirement(
+                        w -> w.version(1.0).tag("element").end(),
+                        "<?xml version='1.0'?><element/>"
+                ),
+
+                requirement(
+                        w -> w.encoding("UTF-8").tag("element").end(),
+                        "<?xml encoding='UTF-8'?><element/>"
+                ),
+
+                requirement(
+                        w -> w.version(1.0).encoding("UTF-8").tag("element").close(),
+                        "<?xml version='1.0' encoding='UTF-8'?><element/>"
+                ),
+
+                requirement(
+                        w -> w.version(1.0).encoding("UTF-8")
+                                .tag("element").attribute("a", "b").xmlns("http://my/uri")
+                                .text("aha")
+                                .cdata("&uuu")
+                                .cdata(" f")
+                                .end(),
+                        "<?xml version='1.0' encoding='UTF-8'?><element a='b' xmlns='http://my/uri'>aha<!CDATA[&uuu f]></element>"
+                ),
+
+                requirement(
+                        w -> {
+                            RootElementWriter tag = w.tag("tag");
+                            tag.tag("one").attribute("a", "u").text("1");
+                            tag.tag("two").attribute("b", "v").text("2");
+                            tag.close();
+                        },
+                        "<tag><one a='u'>1</one><two b='v'>2</two></tag>"
+                )
         };
     }
 
@@ -64,37 +99,15 @@ public class DocumentWriterFactoryTest {
     @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "No root element created.")
     public void testVersionEncodingAndNoTopLevelElement() {
         StringWriter writer = new StringWriter();
-        document(writer).version(1.0).encoding("UTF-8").finish();
-        assertEquals(0, 1);
+        document(writer).version(1.0).encoding("UTF-8").close();
     }
 
     @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "Trying to output second root.")
     public void testVersionEncodingAndTwoTopLevelElement() {
         StringWriter writer = new StringWriter();
-        document(writer).version(1.0).encoding("UTF-8").open("root").close().open("root").finish();
-    }
-
-    @Test
-    public void testContent() {
-        StringWriter writer = new StringWriter();
-        document(writer)
-                .version(1.0).encoding("UTF-8")
-                .open("element").attribute("a", "b").xmlns("http://my/uri")
-                    .text("aha")
-                    .cdata("uuu")
-                    .cdata(" f")
-                .close();
-        assertEquals(writer.toString(), "<?xml version='1.0' encoding='UTF-8'?><element a='b' xmlns='http://my/uri'>aha<!CDATA[uuu f]></element>");
-    }
-
-    @Test
-    public void testLevel() {
-        StringWriter writer = new StringWriter();
-        ElementWriter<DocumentWriter> tag = document(writer).open("tag");
-        tag.open("one").attribute("a", "u").text("1");
-        tag.open("two").attribute("b", "v").text("2");
-        tag.finish();
-        assertEquals(writer.toString(), "<tag><one a='u'>1</one><two b='v'>2</two></tag>");
+        DocumentWriter documentWriter = document(writer).version(1.0).encoding("UTF-8");
+        documentWriter.tag("root").end();
+        documentWriter.tag("root").close();
     }
 
 }
