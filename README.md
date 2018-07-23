@@ -11,24 +11,26 @@ to be written:
 ```java
 document(new FileWriter("output.xml"))
     .version(1.0).encoding("UTF-8")
-    .open('root').attribute("id", "53gf543")
-        .open("child")
+    .tag('root').attribute("id", "53gf543")
+        .tag("child")
             .text("My text")
-        .close()
-    .close()
-.finish();
+        .end()
+    .end()
+.close();
 ```
 
+### 2. Hierarchical
 Compared to `StreamWriter`, it is hierarchical. So at any point, the current
 writer object is stick to certain level and state. This makes following pattern
 available:
 
 ```java
-ElementWriter<DocumentWriter> root = document(new FileWriter("output.xml"))
-    .open("root");
+RootElementWriter root = document(new FileWriter("output.xml"))
+    .tag("root");
 
-root.open("first").text("first text");
-root.open("second").text("second text");
+root.tag("first").text("first text");
+root.tag("second").text("second text");
+root.finish();
 ```
 With `StreamWriter` similar situation would result in nesting. But with the hierarchical writer
 `root` writer is stick to root element, and thanks to the state it knows, when to close it's
