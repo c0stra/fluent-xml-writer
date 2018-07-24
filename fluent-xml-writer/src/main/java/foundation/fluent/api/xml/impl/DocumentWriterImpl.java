@@ -41,25 +41,32 @@ import java.util.function.Supplier;
 
 import static foundation.fluent.api.xml.impl.DocumentWriterImpl.DocumentState.*;
 import static foundation.fluent.api.xml.impl.DocumentWriterImpl.ElementState.*;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
-public final class DocumentWriterImpl implements DocumentWriter, Supplier<DocumentFinisher> {
+public final class DocumentWriterImpl implements DocumentWriter, Supplier<ContentWriter> {
 
     enum DocumentState {EMPTY, XML, PREFIX, OPEN, FINISHED}
     enum ElementState {OPENING, CONTENT, CDATA, CLOSED}
 
+    private final DocumentWriterConfig config;
     private final PrintWriter writer;
     private final PrintWriter escapingWriter;
     private final PrintWriter cdataWriter;
-    private RootElementWriter child;
+    private ElementWriter child;
     private DocumentState state = EMPTY;
 
     public static DocumentWriter documentBuilder(Writer writer) {
-        Writer cdataWriter = new CDataWriter(writer);
-        return new DocumentWriterImpl(new PrintWriter(writer), new PrintWriter(cdataWriter), new PrintWriter(new EscapingWriter(cdataWriter)));
+        return documentBuilder(writer, new DocumentWriterConfig());
     }
 
-    private DocumentWriterImpl(PrintWriter writer, PrintWriter cdataWriter, PrintWriter escapingWriter) {
+    public static DocumentWriter documentBuilder(Writer writer, DocumentWriterConfig config) {
+        Writer cdataWriter = new CDataWriter(writer);
+        return new DocumentWriterImpl(config, new PrintWriter(writer), new PrintWriter(cdataWriter), new PrintWriter(new EscapingWriter(cdataWriter)));
+    }
+
+    private DocumentWriterImpl(DocumentWriterConfig config, PrintWriter writer, PrintWriter cdataWriter, PrintWriter escapingWriter) {
+        this.config = config;
         this.writer = writer;
         this.cdataWriter = cdataWriter;
         this.escapingWriter = escapingWriter;
@@ -68,11 +75,11 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
     private DocumentWriter set(String name, String value) {
         switch (state) {
             case EMPTY:
-                writer.write("<?xml " + name + "='" + value + "'");
+                writer.write("<?xml " + name + "=" + config.attrQuot + value + config.attrQuot);
                 state = XML;
                 break;
             case XML:
-                writer.write(" " + name + "='" + value + "'");
+                writer.write(" " + name + "=" + config.attrQuot + value + config.attrQuot);
                 break;
             default:
                 throw new IllegalStateException("XML spec must be first in the document.");
@@ -106,15 +113,45 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
     }
 
     @Override
-    public RootElementWriter tag(String tag) {
+    public ElementWriter tag(String tag) {
         toContent();
         state = OPEN;
-        return child = new RootElementWriterImpl(tag, this);
+        return child = new ElementWriterImpl(tag, this);
     }
 
     @Override
-    public RootElementWriter tag(String nsPrefix, String tag) {
+    public ElementWriter tag(String nsPrefix, String tag) {
         return tag(nsPrefix + ':' + tag);
+    }
+
+    @Override
+    public ContentWriter text(String content) {
+        if(isNull(content)) {
+            return this;
+        }
+        for(int i = 0; i < content.length(); i++) {
+            if(!Character.isWhitespace(content.charAt(i))) {
+                throw new IllegalStateException("Cannot write text out of the root");
+            }
+        }
+        writer.write(content);
+        return this;
+    }
+
+    @Override
+    public ContentWriter cdata(String content) {
+        throw new IllegalStateException("Cannot write CDATA out of the root");
+    }
+
+    @Override
+    public ContentWriter fragment(Consumer<Writer> consumer) {
+        consumer.accept(writer);
+        return this;
+    }
+
+    @Override
+    public ContentWriter end() {
+        throw new IllegalStateException("No open tag to close.");
     }
 
     @Override
@@ -127,38 +164,41 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
     }
 
     @Override
-    public DocumentWriter get() {
+    public ContentWriter get() {
         child = null;
         state = FINISHED;
         return this;
     }
 
-    private class RootElementWriterImpl implements RootElementWriter, Supplier<ContentWriter> {
+    private class ElementWriterImpl implements ElementWriter, Supplier<ContentWriter> {
 
         private final String tag;
-        private final Supplier<? extends DocumentFinisher> parent;
+        private final Supplier<ContentWriter> parent;
         private ElementWriter child;
         private ElementState state = OPENING;
 
-        private RootElementWriterImpl(String tag, Supplier<? extends DocumentFinisher> parent) {
+        private ElementWriterImpl(String tag, Supplier<ContentWriter> parent) {
             this.tag = tag;
             this.parent = parent;
             writer.write("<" + tag);
         }
 
-        @Override public RootElementWriter xmlns(String name) {
+        @Override public ElementWriter xmlns(String name) {
             return attribute("xmlns", name);
         }
 
-        @Override public RootElementWriter xmlns(String prefix, URI uri) {
+        @Override public ElementWriter xmlns(String prefix, URI uri) {
             return attribute("xmlns:" + prefix, String.valueOf(uri));
         }
 
-        @Override public RootElementWriter attribute(String name, String value) {
-            writer.write(" " + name + "='");
-            escapingWriter.write(value);
-            writer.write('\'');
-            return this;
+        @Override public ElementWriter attribute(String name, String value) {
+            if(state == OPENING) {
+                writer.write(" " + name + "=" + config.attrQuot);
+                escapingWriter.write(value);
+                writer.write(config.attrQuot);
+                return this;
+            }
+            throw new IllegalStateException("Cannot write attribute " + name + "='" + value + "', when tag <" + tag + "> content started.");
         }
 
         @Override public ContentWriter instruction(String name, String content) {
@@ -203,7 +243,7 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
             return this;
         }
 
-        @Override public DocumentFinisher end() {
+        @Override public ContentWriter end() {
             switch (state) {
                 case OPENING:
                     writer.write("/>");
@@ -245,42 +285,6 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Docume
             child = null;
             return this;
         }
-    }
-
-
-    public class ElementWriterImpl extends RootElementWriterImpl implements ElementWriter {
-
-        private final Supplier<ContentWriter> parent;
-
-        private ElementWriterImpl(String tag, Supplier<ContentWriter> parent) {
-            super(tag, parent);
-            this.parent = parent;
-        }
-
-        @Override
-        public ElementWriter xmlns(String name) {
-            super.xmlns(name);
-            return this;
-        }
-
-        @Override
-        public ElementWriter xmlns(String prefix, URI uri) {
-            super.xmlns(prefix, uri);
-            return this;
-        }
-
-        @Override
-        public ElementWriter attribute(String name, String value) {
-            super.attribute(name, value);
-            return this;
-        }
-
-        @Override
-        public ContentWriter end() {
-            super.end();
-            return parent.get();
-        }
-
     }
 
 }

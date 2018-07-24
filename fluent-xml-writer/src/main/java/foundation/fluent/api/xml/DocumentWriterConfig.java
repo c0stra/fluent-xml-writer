@@ -29,16 +29,20 @@
 
 package foundation.fluent.api.xml;
 
-/**
- * Finisher of the XML document.
- */
-public interface DocumentFinisher {
+public class DocumentWriterConfig {
 
-    /**
-     * Close the XML document.
-     *  1. Close all opened tags
-     *  2. Close underlying output stream.
-     */
-    void close();
+    public final char attrQuot;
+
+    public DocumentWriterConfig() {
+        this('"');
+    }
+
+    public DocumentWriterConfig(char attrQuot) {
+        this.attrQuot = attrQuot;
+    }
+
+    public static final DocumentWriterConfig quot(char attrQuot) {
+        return new DocumentWriterConfig(attrQuot);
+    }
 
 }

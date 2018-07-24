@@ -32,7 +32,7 @@ package foundation.fluent.api.xml;
 /**
  * Writer of the top level document information.
  */
-public interface DocumentWriter extends DocumentFinisher {
+public interface DocumentWriter extends ContentWriter {
 
     /**
      * Write XML document version.
@@ -56,28 +56,5 @@ public interface DocumentWriter extends DocumentFinisher {
      * @return Document writer to continue with its definition.
      */
     DocumentWriter encoding(String encoding);
-
-    /**
-     * Write XML processing instruction.
-     * @param name Processing instruction name (e.g. xml-stylesheet).
-     * @param content Content of the processing instruction tag.
-     * @return Document writer to continue with its definition.
-     */
-    DocumentWriter instruction(String name, String content);
-
-    /**
-     * Start writing opening tag with provided tag name.
-     * @param name Tag name.
-     * @return Writer of element content including it's attributes.
-     */
-    RootElementWriter tag(String name);
-
-    /**
-     * Start writing opening tag with provided XML namespace prefix and tag name.
-     * @param nsPrefix XML namespace prefix.
-     * @param name Tag name.
-     * @return Writer of element content including it's attributes.
-     */
-    RootElementWriter tag(String nsPrefix, String name);
 
 }

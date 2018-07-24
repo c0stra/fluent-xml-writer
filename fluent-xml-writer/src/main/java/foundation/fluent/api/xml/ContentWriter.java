@@ -35,7 +35,7 @@ import java.util.function.Consumer;
 /**
  * Writer of the XML tag content.
  */
-public interface ContentWriter extends DocumentFinisher {
+public interface ContentWriter {
 
     /**
      * Write XML processing instruction.
@@ -80,6 +80,13 @@ public interface ContentWriter extends DocumentFinisher {
      * End currently opened tag.
      * @return Parent content writer.
      */
-    DocumentFinisher end();
+    ContentWriter end();
+
+    /**
+     * Close the XML document.
+     *  1. Close all opened tags
+     *  2. Close underlying output stream.
+     */
+    void close();
 
 }

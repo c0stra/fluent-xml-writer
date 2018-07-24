@@ -39,4 +39,8 @@ public class DocumentWriterFactory {
         return documentBuilder(writer);
     }
 
+    public static DocumentWriter document(Writer writer, DocumentWriterConfig config) {
+        return documentBuilder(writer, config);
+    }
+
 }
