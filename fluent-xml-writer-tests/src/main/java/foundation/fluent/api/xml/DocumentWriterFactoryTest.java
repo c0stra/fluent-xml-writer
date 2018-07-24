@@ -35,7 +35,7 @@ import org.testng.annotations.Test;
 import java.io.StringWriter;
 import java.util.function.Consumer;
 
-import static foundation.fluent.api.xml.DocumentWriterConfig.quot;
+import static foundation.fluent.api.xml.DocumentWriterConfig.config;
 import static foundation.fluent.api.xml.DocumentWriterFactory.*;
 import static org.testng.Assert.assertEquals;
 
@@ -93,20 +93,20 @@ public class DocumentWriterFactoryTest {
     @Test(dataProvider = "data")
     public void test(Consumer<DocumentWriter> actual, String expected) {
         StringWriter writer = new StringWriter();
-        actual.accept(document(writer, quot('\'')));
+        actual.accept(document(writer, config().quot('\'')));
         assertEquals(writer.toString(), expected);
     }
 
     @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "No root element created.")
     public void testVersionEncodingAndNoTopLevelElement() {
         StringWriter writer = new StringWriter();
-        document(writer, quot('\'')).version(1.0).encoding("UTF-8").close();
+        document(writer, config().quot('\'')).version(1.0).encoding("UTF-8").close();
     }
 
     @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "Trying to output second root.")
     public void testVersionEncodingAndTwoTopLevelElement() {
         StringWriter writer = new StringWriter();
-        DocumentWriter documentWriter = document(writer, quot('\'')).version(1.0).encoding("UTF-8");
+        DocumentWriter documentWriter = document(writer, config().quot('\'')).version(1.0).encoding("UTF-8");
         documentWriter.tag("root").end();
         documentWriter.tag("root").close();
     }

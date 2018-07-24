@@ -31,12 +31,13 @@ package foundation.fluent.api.xml;
 
 import java.io.Writer;
 
+import static foundation.fluent.api.xml.DocumentWriterConfig.config;
 import static foundation.fluent.api.xml.impl.DocumentWriterImpl.documentBuilder;
 
 public class DocumentWriterFactory {
 
     public static DocumentWriter document(Writer writer) {
-        return documentBuilder(writer);
+        return document(writer, config());
     }
 
     public static DocumentWriter document(Writer writer, DocumentWriterConfig config) {

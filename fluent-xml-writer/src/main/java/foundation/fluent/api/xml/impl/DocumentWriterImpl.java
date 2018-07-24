@@ -56,10 +56,6 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Conten
     private ElementWriter child;
     private DocumentState state = EMPTY;
 
-    public static DocumentWriter documentBuilder(Writer writer) {
-        return documentBuilder(writer, new DocumentWriterConfig());
-    }
-
     public static DocumentWriter documentBuilder(Writer writer, DocumentWriterConfig config) {
         Writer cdataWriter = new CDataWriter(writer);
         return new DocumentWriterImpl(config, new PrintWriter(writer), new PrintWriter(cdataWriter), new PrintWriter(new EscapingWriter(cdataWriter)));
@@ -193,7 +189,7 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Conten
 
         @Override public ElementWriter attribute(String name, String value) {
             if(state == OPENING) {
-                writer.write(" " + name + "=" + config.attrQuot);
+                writer.write(config.attributeIndent + name + "=" + config.attrQuot);
                 escapingWriter.write(value);
                 writer.write(config.attrQuot);
                 return this;

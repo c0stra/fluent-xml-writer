@@ -32,17 +32,29 @@ package foundation.fluent.api.xml;
 public class DocumentWriterConfig {
 
     public final char attrQuot;
+    public final String indent;
+    public final String attributeIndent;
 
-    public DocumentWriterConfig() {
-        this('"');
-    }
-
-    public DocumentWriterConfig(char attrQuot) {
+    private DocumentWriterConfig(char attrQuot, String indent, String attributeIndent) {
         this.attrQuot = attrQuot;
+        this.indent = indent;
+        this.attributeIndent = attributeIndent;
     }
 
-    public static final DocumentWriterConfig quot(char attrQuot) {
-        return new DocumentWriterConfig(attrQuot);
+    public static DocumentWriterConfig config() {
+        return new DocumentWriterConfig('"', "", " ");
+    }
+
+    public DocumentWriterConfig quot(char attrQuot) {
+        return new DocumentWriterConfig(attrQuot, indent, attributeIndent);
+    }
+
+    public DocumentWriterConfig indent(String indent) {
+        return new DocumentWriterConfig(attrQuot, indent, attributeIndent);
+    }
+
+    public DocumentWriterConfig indentAttribute(String attributeIndent) {
+        return new DocumentWriterConfig(attrQuot, indent, attributeIndent);
     }
 
 }
