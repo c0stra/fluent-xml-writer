@@ -4,7 +4,10 @@
 Fluent, hierarchical, XML writer is a tool that should make writing XML data
 programmatically convenient and less error prone.
 
-### 1. Fluent
+### 1. Streaming
+This XML writer is streaming. It means, it's not creating any XML document representation in memory, but immediately writes the data to the XML, similarly as XmlStreamWriter. So it's good choice e.g. for XML logging facilities.
+
+### 2. Fluent
 Fluent stands for API, that allows chaining. So compared to e.g. `StreamWriter`, you can chain your pieces
 to be written:
 
@@ -19,7 +22,7 @@ document(new FileWriter("output.xml"))
 .close();
 ```
 
-### 2. Hierarchical
+### 3. Hierarchical
 Compared to `StreamWriter`, it is hierarchical. So at any point, the current
 writer object is stick to certain level and state. This makes following pattern
 available:
@@ -43,3 +46,4 @@ Result will be:
     <second>second text</second>
 </root>
 ```
+This makes it again good for XML logging facilities. Because it will always make sure to close any unclosed elements for you.
