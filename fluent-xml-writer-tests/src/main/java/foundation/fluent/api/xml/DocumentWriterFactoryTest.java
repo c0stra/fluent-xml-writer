@@ -31,9 +31,19 @@ package foundation.fluent.api.xml;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static foundation.fluent.api.xml.DocumentWriterConfig.config;
 import static foundation.fluent.api.xml.DocumentWriterFactory.*;
@@ -42,7 +52,36 @@ import static org.testng.Assert.assertEquals;
 public class DocumentWriterFactoryTest {
 
     private Object[] requirement(Consumer<DocumentWriter> actual, String expected) {
-        return new Object[] {actual, expected};
+        return new Object[] {new Consumer<DocumentWriter>() {
+
+            @Override
+            public void accept(DocumentWriter documentWriter) {
+                actual.accept(documentWriter);
+            }
+
+            @Override
+            public String toString() {
+                StringBuilder stringBuilder = new StringBuilder("w");
+                actual.accept((DocumentWriter) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{DocumentWriter.class}, new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        if(method.getDeclaringClass().equals(Object.class)) {
+                            return method.invoke(this);
+                        }
+                        stringBuilder.append('.').append(method.getName()).append('(');
+                        if(args != null) {
+                            stringBuilder.append(Arrays.stream(args).map(arg -> arg instanceof String ? "\"" + arg + "\"" : String.valueOf(arg)).collect(Collectors.joining(", ")));
+                        }
+                        stringBuilder.append(')');
+                        if(method.getReturnType().equals(void.class)) {
+                            return null;
+                        }
+                        return Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{method.getReturnType()}, this);
+                    }
+                }));
+                return stringBuilder.toString();
+            }
+        }, expected};
     }
 
     @DataProvider
@@ -59,11 +98,6 @@ public class DocumentWriterFactoryTest {
                 ),
 
                 requirement(
-                        w -> w.encoding("UTF-8").tag("element").end(),
-                        "<?xml encoding='UTF-8'?><element/>"
-                ),
-
-                requirement(
                         w -> w.version(1.0).encoding("UTF-8").tag("element").close(),
                         "<?xml version='1.0' encoding='UTF-8'?><element/>"
                 ),
@@ -71,11 +105,11 @@ public class DocumentWriterFactoryTest {
                 requirement(
                         w -> w.version(1.0).encoding("UTF-8")
                                 .tag("element").attribute("a", "b").xmlns("http://my/uri")
-                                .text("aha")
+                                .text("aha<")
                                 .cdata("&uuu")
                                 .cdata(" f")
                                 .end(),
-                        "<?xml version='1.0' encoding='UTF-8'?><element a='b' xmlns='http://my/uri'>aha<!CDATA[&uuu f]></element>"
+                        "<?xml version='1.0' encoding='UTF-8'?><element a='b' xmlns='http://my/uri'>aha&lt;<![CDATA[&uuu f]]></element>"
                 ),
 
                 requirement(
@@ -91,10 +125,11 @@ public class DocumentWriterFactoryTest {
     }
 
     @Test(dataProvider = "data")
-    public void test(Consumer<DocumentWriter> actual, String expected) {
+    public void test(Consumer<DocumentWriter> actual, String expected) throws ParserConfigurationException, IOException, SAXException {
         StringWriter writer = new StringWriter();
         actual.accept(document(writer, config().quot('\'')));
         assertEquals(writer.toString(), expected);
+        DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(writer.toString().getBytes()));
     }
 
     @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "No root element created.")

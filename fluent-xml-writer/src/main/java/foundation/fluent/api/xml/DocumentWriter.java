@@ -39,22 +39,26 @@ public interface DocumentWriter extends ContentWriter {
      * @param version document version.
      * @return Document writer to continue with its definition.
      */
-    DocumentWriter version(String version);
+    XmlSpecWriter version(String version);
 
     /**
      * Write XML document version.
      * @param version document version.
      * @return Document writer to continue with its definition.
      */
-    default DocumentWriter version(double version) {
+    default XmlSpecWriter version(double version) {
         return version(String.valueOf(version));
     }
 
-    /**
-     * Write XML document encoding.
-     * @param encoding document encoding.
-     * @return Document writer to continue with its definition.
-     */
-    DocumentWriter encoding(String encoding);
+    interface XmlSpecWriter extends DocumentWriter {
+
+        /**
+         * Write XML document encoding.
+         * @param encoding document encoding.
+         * @return Document writer to continue with its definition.
+         */
+        DocumentWriter encoding(String encoding);
+
+    }
 
 }

@@ -44,7 +44,7 @@ import static foundation.fluent.api.xml.impl.DocumentWriterImpl.ElementState.*;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
-public final class DocumentWriterImpl implements DocumentWriter, Supplier<ContentWriter> {
+public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, Supplier<ContentWriter> {
 
     enum DocumentState {EMPTY, XML, PREFIX, OPEN, FINISHED}
     enum ElementState {OPENING, CONTENT, CDATA, CLOSED}
@@ -68,7 +68,7 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Conten
         this.escapingWriter = escapingWriter;
     }
 
-    private DocumentWriter set(String name, String value) {
+    private XmlSpecWriter set(String name, String value) {
         switch (state) {
             case EMPTY:
                 writer.write("<?xml " + name + "=" + config.attrQuot + value + config.attrQuot);
@@ -93,12 +93,12 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Conten
     }
 
     @Override
-    public DocumentWriter version(String version) {
+    public XmlSpecWriter version(String version) {
         return set("version", version);
     }
 
     @Override
-    public DocumentWriter encoding(String encoding) {
+    public XmlSpecWriter encoding(String encoding) {
         return set("encoding", encoding);
     }
 
@@ -220,12 +220,12 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Conten
         @Override public ContentWriter cdata(String content) {
             switch (state) {
                 case OPENING:
-                    writer.write("/><!CDATA[");
+                    writer.write("/><![CDATA[");
                     state = CDATA;
                     break;
                 case CONTENT:
                     closeChild();
-                    writer.write("<!CDATA[");
+                    writer.write("<![CDATA[");
                     state = CDATA;
                     break;
                 case CLOSED:
@@ -249,7 +249,7 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Conten
                     writer.write("</" + tag + '>');
                     break;
                 case CDATA:
-                    writer.write("]></" + tag + '>');
+                    writer.write("]]></" + tag + '>');
                     break;
                 case CLOSED:
                     throw new IllegalStateException("Element " + tag + " already closed.");
@@ -269,7 +269,7 @@ public final class DocumentWriterImpl implements DocumentWriter, Supplier<Conten
         private void toContent() {
             switch (state) {
                 case OPENING: writer.write(">"); break;
-                case CDATA: writer.write("]>"); break;
+                case CDATA: writer.write("]]>"); break;
                 case CONTENT: closeChild(); break;
                 case CLOSED: throw new IllegalStateException("Element " + tag + " already closed.");
             }
