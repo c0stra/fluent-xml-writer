@@ -32,37 +32,21 @@ package foundation.fluent.api.xml.writer;
 import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.HashMap;
-import java.util.Map;
 
 public class EscapingWriter extends FilterWriter {
-
-    private final Map<Integer, String> entities;
 
     /**
      * Create a new filtered writer.
      *
      * @param out a Writer object to provide the underlying stream.
-     * @param entities
      * @throws NullPointerException if <code>out</code> is <code>null</code>
      */
-    public EscapingWriter(Writer out, Map<Integer, String> entities) {
-        super(out);
-        this.entities = entities;
-    }
-
     public EscapingWriter(Writer out) {
-        this(out, entities());
+        super(out);
     }
 
     @Override
     public void write(int c) throws IOException {
-        /*
-        if(entities.containsKey(c)) {
-            out.write(entities.get(c));
-        } else {
-            out.write(c);
-        }*/
         switch (c) {
             case '<': out.write("&lt;"); break;
             case '>': out.write("&gt;"); break;
@@ -84,8 +68,6 @@ public class EscapingWriter extends FilterWriter {
         int end = off + len;
         int s = off;
         for(int i = off; i < end; i++) {
-            //int c = cbuf[i];
-
             switch (cbuf[i]) {
                 case '<': s = escape(cbuf, s, i, "&lt;"); break;
                 case '>': s = escape(cbuf, s, i, "&gt;"); break;
@@ -93,14 +75,6 @@ public class EscapingWriter extends FilterWriter {
                 case '"': s = escape(cbuf, s, i, "&quot;"); break;
                 case '\'': s = escape(cbuf, s, i, "&apos;"); break;
             }
-            /*
-            if(entities.containsKey(c)) {
-                if(i > s) {
-                    out.write(cbuf, s, i - s);
-                }
-                out.write(entities.get(c));
-                s = i + 1;
-            }*/
         }
         if(end > s) {
             out.write(cbuf, s, end - s);
@@ -112,13 +86,4 @@ public class EscapingWriter extends FilterWriter {
         write(str.toCharArray(), off, len);
     }
 
-    private static Map<Integer, String> entities() {
-        HashMap<Integer, String> map = new HashMap<>();
-        map.put((int)'&', "&amp;");
-        map.put((int)'<', "&lt;");
-        map.put((int)'>', "&gt;");
-        map.put((int)'"', "&quot;");
-        map.put((int)'\'', "&apos;");
-        return map;
-    }
 }

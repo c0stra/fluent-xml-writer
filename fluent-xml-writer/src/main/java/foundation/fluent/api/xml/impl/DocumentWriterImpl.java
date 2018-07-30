@@ -98,6 +98,12 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
     }
 
     @Override
+    public DocumentWriter flush() {
+        writer.flush();
+        return this;
+    }
+
+    @Override
     public XmlSpecWriter encoding(String encoding) {
         return set("encoding", encoding);
     }
@@ -195,6 +201,12 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
                 return this;
             }
             throw new IllegalStateException("Cannot write attribute " + name + "='" + value + "', when tag <" + tag + "> content started.");
+        }
+
+        @Override
+        public ElementWriter flush() {
+            writer.flush();
+            return this;
         }
 
         @Override public ContentWriter instruction(String name, String content) {

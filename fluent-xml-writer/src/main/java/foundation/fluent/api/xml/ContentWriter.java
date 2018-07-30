@@ -89,4 +89,10 @@ public interface ContentWriter {
      */
     void close();
 
+    /**
+     * Flush the content using underlying writer.
+     * @return this
+     */
+    ContentWriter flush();
+
 }

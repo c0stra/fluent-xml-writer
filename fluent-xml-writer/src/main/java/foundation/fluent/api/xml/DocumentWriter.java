@@ -61,4 +61,10 @@ public interface DocumentWriter extends ContentWriter {
 
     }
 
+    /**
+     * Flush the content using underlying writer.
+     * @return this
+     */
+    DocumentWriter flush();
+
 }

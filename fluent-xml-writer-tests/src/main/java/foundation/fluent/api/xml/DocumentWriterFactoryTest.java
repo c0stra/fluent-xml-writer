@@ -38,51 +38,14 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.Arrays;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static foundation.fluent.api.xml.DocumentWriterConfig.config;
 import static foundation.fluent.api.xml.DocumentWriterFactory.*;
+import static foundation.fluent.api.xml.Requirement.requirement;
 import static org.testng.Assert.assertEquals;
 
 public class DocumentWriterFactoryTest {
-
-    private Object[] requirement(Consumer<DocumentWriter> actual, String expected) {
-        return new Object[] {new Consumer<DocumentWriter>() {
-
-            @Override
-            public void accept(DocumentWriter documentWriter) {
-                actual.accept(documentWriter);
-            }
-
-            @Override
-            public String toString() {
-                StringBuilder stringBuilder = new StringBuilder("w");
-                actual.accept((DocumentWriter) Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{DocumentWriter.class}, new InvocationHandler() {
-                    @Override
-                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                        if(method.getDeclaringClass().equals(Object.class)) {
-                            return method.invoke(this);
-                        }
-                        stringBuilder.append('.').append(method.getName()).append('(');
-                        if(args != null) {
-                            stringBuilder.append(Arrays.stream(args).map(arg -> arg instanceof String ? "\"" + arg + "\"" : String.valueOf(arg)).collect(Collectors.joining(", ")));
-                        }
-                        stringBuilder.append(')');
-                        if(method.getReturnType().equals(void.class)) {
-                            return null;
-                        }
-                        return Proxy.newProxyInstance(getClass().getClassLoader(), new Class[]{method.getReturnType()}, this);
-                    }
-                }));
-                return stringBuilder.toString();
-            }
-        }, expected};
-    }
 
     @DataProvider
     public Object[][] data() {

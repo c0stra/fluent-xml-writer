@@ -29,6 +29,7 @@
 
 package foundation.fluent.api.xml;
 
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import javax.xml.stream.XMLOutputFactory;
@@ -36,6 +37,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
 
 import static foundation.fluent.api.xml.DocumentWriterFactory.document;
@@ -91,4 +93,15 @@ public class DocumentWriterPerformanceSuite {
         writer.close();
     }
 
+    @Test(enabled = false)
+    public void testAmp() throws XMLStreamException, IOException {
+        StringWriter stringWriter = new StringWriter();
+        XMLStreamWriter writer = XMLOutputFactory.newFactory().createXMLStreamWriter(stringWriter);
+        writer.writeStartDocument("UTF-8", "1.0");
+        writer.writeStartElement("element");
+        writer.writeCharacters("&amp;");
+        writer.writeEndDocument();
+        writer.close();
+        Assert.assertEquals(stringWriter.toString(), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><element>&amp;</element>");
+    }
 }

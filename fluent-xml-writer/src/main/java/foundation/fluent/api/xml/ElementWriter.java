@@ -59,4 +59,10 @@ public interface ElementWriter extends ContentWriter {
      */
     ElementWriter attribute(String name, String value);
 
+    /**
+     * Flush the content using underlying writer.
+     * @return this
+     */
+    ElementWriter flush();
+
 }
