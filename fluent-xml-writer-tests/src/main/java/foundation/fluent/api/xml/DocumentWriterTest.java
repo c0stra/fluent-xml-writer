@@ -31,6 +31,7 @@ package foundation.fluent.api.xml;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -83,6 +84,11 @@ public class DocumentWriterTest {
                             tag.close();
                         },
                         "<tag><one a='u'>1</one><two b='v'>2</two></tag>"
+                ),
+
+                requirement(
+                        w -> w.version(1.0).encoding("UTF-8").tag("tag").xmlns("fluent", "http://api.fluent.foundation/").tag("fluent", "api").close(),
+                        "<?xml version='1.0' encoding='UTF-8'?><tag xmlns:fluent='http://api.fluent.foundation/'><fluent:api/></tag>"
                 )
         };
     }
@@ -92,7 +98,10 @@ public class DocumentWriterTest {
         StringWriter writer = new StringWriter();
         actual.accept(document(writer, config().quot('\'')));
         assertEquals(writer.toString(), expected);
-        DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(writer.toString().getBytes()));
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        Document document = factory.newDocumentBuilder().parse(new ByteArrayInputStream(writer.toString().getBytes()));
+        System.out.println(document);
     }
 
 }

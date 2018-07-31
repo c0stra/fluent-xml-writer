@@ -52,6 +52,16 @@ public interface ElementWriter extends ContentWriter {
     ElementWriter xmlns(String prefix, URI uri);
 
     /**
+     * Write XML namespace of the current tag.
+     * @param prefix Namespace prefix.
+     * @param uri Namespace URI.
+     * @return Writer of other tag attributes.
+     */
+    default ElementWriter xmlns(String prefix, String uri) {
+        return xmlns(prefix, URI.create(uri));
+    }
+
+    /**
      * Write tag attribute.
      * @param name Attribute name.
      * @param value Attribute value.
