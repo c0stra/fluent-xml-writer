@@ -29,7 +29,7 @@
 
 package foundation.fluent.api.xml;
 
-public class DocumentWriterConfig {
+public final class DocumentWriterConfig {
 
     public final char attrQuot;
     public final String indent;

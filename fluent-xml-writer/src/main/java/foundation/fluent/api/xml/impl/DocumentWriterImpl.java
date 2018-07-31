@@ -133,7 +133,7 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
         }
         for(int i = 0; i < content.length(); i++) {
             if(!Character.isWhitespace(content.charAt(i))) {
-                throw new IllegalStateException("Cannot write text out of the root");
+                throw new IllegalStateException("Cannot write text out of the root element.");
             }
         }
         writer.write(content);
@@ -142,7 +142,7 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
 
     @Override
     public ContentWriter cdata(String content) {
-        throw new IllegalStateException("Cannot write CDATA out of the root");
+        throw new IllegalStateException("Cannot write CDATA out of the root element.");
     }
 
     @Override
@@ -172,7 +172,7 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
         return this;
     }
 
-    private class ElementWriterImpl implements ElementWriter, Supplier<ContentWriter> {
+    private final class ElementWriterImpl implements ElementWriter, Supplier<ContentWriter> {
 
         private final String tag;
         private final Supplier<ContentWriter> parent;

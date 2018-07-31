@@ -45,7 +45,7 @@ import static foundation.fluent.api.xml.DocumentWriterFactory.*;
 import static foundation.fluent.api.xml.Requirement.requirement;
 import static org.testng.Assert.assertEquals;
 
-public class DocumentWriterFactoryTest {
+public class DocumentWriterTest {
 
     @DataProvider
     public Object[][] data() {
@@ -88,25 +88,11 @@ public class DocumentWriterFactoryTest {
     }
 
     @Test(dataProvider = "data")
-    public void test(Consumer<DocumentWriter> actual, String expected) throws ParserConfigurationException, IOException, SAXException {
+    public void testThat(Consumer<DocumentWriter> actual, String expected) throws ParserConfigurationException, IOException, SAXException {
         StringWriter writer = new StringWriter();
         actual.accept(document(writer, config().quot('\'')));
         assertEquals(writer.toString(), expected);
         DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(writer.toString().getBytes()));
-    }
-
-    @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "No root element created.")
-    public void testVersionEncodingAndNoTopLevelElement() {
-        StringWriter writer = new StringWriter();
-        document(writer, config().quot('\'')).version(1.0).encoding("UTF-8").close();
-    }
-
-    @Test(expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "Trying to output second root.")
-    public void testVersionEncodingAndTwoTopLevelElement() {
-        StringWriter writer = new StringWriter();
-        DocumentWriter documentWriter = document(writer, config().quot('\'')).version(1.0).encoding("UTF-8");
-        documentWriter.tag("root").end();
-        documentWriter.tag("root").close();
     }
 
 }

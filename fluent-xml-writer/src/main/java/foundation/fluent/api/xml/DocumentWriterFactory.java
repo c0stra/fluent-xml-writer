@@ -34,7 +34,7 @@ import java.io.Writer;
 import static foundation.fluent.api.xml.DocumentWriterConfig.config;
 import static foundation.fluent.api.xml.impl.DocumentWriterImpl.documentBuilder;
 
-public class DocumentWriterFactory {
+public final class DocumentWriterFactory {
 
     public static DocumentWriter document(Writer writer) {
         return document(writer, config());
