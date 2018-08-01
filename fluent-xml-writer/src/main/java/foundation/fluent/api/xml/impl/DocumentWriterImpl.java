@@ -114,18 +114,27 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
     @Override
     public DocumentWriter instruction(String name, String content) {
         toContent();
-        writer.write("<?" + name + " " + content + "?>");
+        writer.write(config.prettyPrint + "<?" + name + " " + content + "?>");
         return this;
     }
 
     @Override
     public ElementWriter tag(String tag) {
-        toContent();
-        if(state != PREFIX) {
-            throw new IllegalStateException("Trying to output second root.");
+        switch (state) {
+            case EMPTY:
+                writer.write('<' + tag);
+                break;
+            case SPEC:
+                writer.write("?>" + config.prettyPrint + '<' + tag);
+                break;
+            case PREFIX:
+                writer.write(config.prettyPrint + '<' + tag);
+                break;
+            default:
+                throw new IllegalStateException("Trying to output second root.");
         }
         state = OPEN;
-        return child = new ElementWriterImpl(tag, this);
+        return child = new ElementWriterImpl(config.prettyPrint, tag, this);
     }
 
     @Override
@@ -165,7 +174,7 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
     @Override
     public ContentWriter comment(String comment) {
         toContent();
-        cdataWriter.write("<!-- " + comment + " -->");
+        cdataWriter.write(config.prettyPrint + "<!-- " + comment + " -->");
         return this;
     }
 
@@ -194,15 +203,18 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
 
     private final class ElementWriterImpl implements ElementWriter, Supplier<ContentWriter> {
 
+        private final String tagPrefix;
+        private final String prefix;
         private final String tag;
         private final Supplier<ContentWriter> parent;
         private ElementWriter child;
         private ElementState state = OPENING;
 
-        private ElementWriterImpl(String tag, Supplier<ContentWriter> parent) {
+        private ElementWriterImpl(String prefix, String tag, Supplier<ContentWriter> parent) {
+            this.tagPrefix = prefix;
+            this.prefix = prefix + config.indent;
             this.tag = tag;
             this.parent = parent;
-            writer.write("<" + tag);
         }
 
         @Override public ElementWriter xmlns(String name) {
@@ -231,13 +243,14 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
 
         @Override public ContentWriter instruction(String name, String content) {
             toContent();
-            writer.write("<?" + name + " " + content + "?>");
+            writer.write(prefix + "<?" + name + " " + content + "?>");
             return this;
         }
 
         @Override public ElementWriter tag(String tag) {
             toContent();
-            return child = new ElementWriterImpl(tag, this);
+            writer.write(prefix + '<' + tag);
+            return child = new ElementWriterImpl(prefix, tag, this);
         }
 
         @Override public ElementWriter tag(String nsPrefix, String tag) {
@@ -246,19 +259,19 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
 
         @Override public ContentWriter text(String content) {
             toContent();
-            escapingWriter.write(content);
+            escapingWriter.write(prefix + content);
             return this;
         }
 
         @Override public ContentWriter cdata(String content) {
             switch (state) {
                 case OPENING:
-                    writer.write("/><![CDATA[");
+                    writer.write("/>" + prefix + "<![CDATA[");
                     state = CDATA;
                     break;
                 case CONTENT:
                     closeChild();
-                    writer.write("<![CDATA[");
+                    writer.write(prefix + "<![CDATA[");
                     state = CDATA;
                     break;
                 case CLOSED:
@@ -271,7 +284,7 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
         @Override
         public ContentWriter comment(String comment) {
             toContent();
-            cdataWriter.write("<!-- " + comment + " -->");
+            cdataWriter.write(prefix + "<!-- " + comment + " -->");
             return this;
         }
 
@@ -282,10 +295,10 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
                     break;
                 case CONTENT:
                     closeChild();
-                    writer.write("</" + tag + '>');
+                    writer.write(tagPrefix + "</" + tag + '>');
                     break;
                 case CDATA:
-                    writer.write("]]></" + tag + '>');
+                    writer.write("]]>" + tagPrefix + "</" + tag + '>');
                     break;
                 case CLOSED:
                     throw new IllegalStateException("Element " + tag + " already closed.");

@@ -38,7 +38,7 @@ import java.util.function.IntUnaryOperator;
 
 public class CDataWriter extends FilterWriter {
 
-    public static final IntUnaryOperator INVALID_CHARACTER_MAPPING = c -> c < 32 ? ' ' : c;
+    public static final IntUnaryOperator INVALID_CHARACTER_MAPPING = c -> c < 9 ? ' ' : c;
 
     private final IntPredicate invalid = c -> c < 32;
     private final IntUnaryOperator operator;

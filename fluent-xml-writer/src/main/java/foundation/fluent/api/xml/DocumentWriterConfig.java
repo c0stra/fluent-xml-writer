@@ -29,32 +29,44 @@
 
 package foundation.fluent.api.xml;
 
+import java.util.Arrays;
+
 public final class DocumentWriterConfig {
 
     public final char attrQuot;
+    public final String prettyPrint;
     public final String indent;
     public final String attributeIndent;
 
-    private DocumentWriterConfig(char attrQuot, String indent, String attributeIndent) {
+    private DocumentWriterConfig(char attrQuot, String prettyPrint, String indent, String attributeIndent) {
         this.attrQuot = attrQuot;
+        this.prettyPrint = prettyPrint;
         this.indent = indent;
         this.attributeIndent = attributeIndent;
     }
 
     public static DocumentWriterConfig config() {
-        return new DocumentWriterConfig('"', "", " ");
+        return new DocumentWriterConfig('"', "", "", " ");
     }
 
     public DocumentWriterConfig quot(char attrQuot) {
-        return new DocumentWriterConfig(attrQuot, indent, attributeIndent);
+        return new DocumentWriterConfig(attrQuot, prettyPrint, indent, attributeIndent);
     }
 
-    public DocumentWriterConfig indent(String indent) {
-        return new DocumentWriterConfig(attrQuot, indent, attributeIndent);
+    public DocumentWriterConfig indentSpaces(int level) {
+        char[] indent = new char[level];
+        Arrays.fill(indent, ' ');
+        return new DocumentWriterConfig(attrQuot, "\n", new String(indent), attributeIndent);
+    }
+
+    public DocumentWriterConfig indentTabs(int level) {
+        char[] indent = new char[level];
+        Arrays.fill(indent, '\t');
+        return new DocumentWriterConfig(attrQuot, "\n", new String(indent), attributeIndent);
     }
 
     public DocumentWriterConfig indentAttribute(String attributeIndent) {
-        return new DocumentWriterConfig(attrQuot, indent, attributeIndent);
+        return new DocumentWriterConfig(attrQuot, prettyPrint, indent, attributeIndent);
     }
 
 }
