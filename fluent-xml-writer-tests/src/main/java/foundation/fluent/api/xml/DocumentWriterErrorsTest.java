@@ -51,8 +51,18 @@ public class DocumentWriterErrorsTest {
                 ),
 
                 negativeRequirement(
+                        w -> w.tag("root").end().end().close(),
+                        "No open element to close."
+                ),
+
+                negativeRequirement(
                         w -> w.text("sfv").close(),
                         "Cannot write text out of the root element."
+                ),
+
+                negativeRequirement(
+                        w -> w.cdata("sfv").close(),
+                        "Cannot write CDATA out of the root element."
                 ),
 
                 negativeRequirement(
@@ -64,6 +74,13 @@ public class DocumentWriterErrorsTest {
                         "Trying to output second root."
                 ),
 
+                negativeRequirement(
+                        w -> {
+                            w.tag("root").end();
+                            w.version(1.0);
+                        },
+                        "XML spec must be first in the document."
+                )
         };
     }
 

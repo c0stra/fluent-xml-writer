@@ -36,7 +36,6 @@ import foundation.fluent.api.xml.writer.EscapingWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.net.URI;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static foundation.fluent.api.xml.impl.DocumentWriterImpl.DocumentState.*;
@@ -46,7 +45,7 @@ import static java.util.Objects.nonNull;
 
 public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, Supplier<ContentWriter> {
 
-    enum DocumentState {EMPTY, XML, PREFIX, OPEN, FINISHED}
+    enum DocumentState {EMPTY, SPEC, PREFIX, OPEN, FINISHED}
     enum ElementState {OPENING, CONTENT, CDATA, CLOSED}
 
     private final DocumentWriterConfig config;
@@ -72,9 +71,9 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
         switch (state) {
             case EMPTY:
                 writer.write("<?xml " + name + "=" + config.attrQuot + value + config.attrQuot);
-                state = XML;
+                state = SPEC;
                 break;
-            case XML:
+            case SPEC:
                 writer.write(" " + name + "=" + config.attrQuot + value + config.attrQuot);
                 break;
             default:
@@ -85,10 +84,14 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
 
     private void toContent() {
         switch (state) {
-            case XML: writer.write("?>");
+            case SPEC: writer.write("?>");
             case EMPTY: state = PREFIX;
             case PREFIX: return;
-            default: throw new IllegalStateException("Trying to output second root.");
+            case OPEN:
+                child.end();
+                state = FINISHED;
+            default:
+                // Nothing
         }
     }
 
@@ -111,12 +114,16 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
     @Override
     public DocumentWriter instruction(String name, String content) {
         toContent();
+        writer.write("<?" + name + " " + content + "?>");
         return this;
     }
 
     @Override
     public ElementWriter tag(String tag) {
         toContent();
+        if(state != PREFIX) {
+            throw new IllegalStateException("Trying to output second root.");
+        }
         state = OPEN;
         return child = new ElementWriterImpl(tag, this);
     }
@@ -136,6 +143,16 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
                 throw new IllegalStateException("Cannot write text out of the root element.");
             }
         }
+        switch (state) {
+            case SPEC:
+                writer.write("?>");
+                state = PREFIX;
+                break;
+            case OPEN:
+                child.end();
+                state = FINISHED;
+                break;
+        }
         writer.write(content);
         return this;
     }
@@ -146,21 +163,24 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
     }
 
     @Override
-    public ContentWriter fragment(Consumer<Writer> consumer) {
-        consumer.accept(writer);
+    public ContentWriter comment(String comment) {
+        toContent();
+        cdataWriter.write("<!-- " + comment + " -->");
         return this;
     }
 
     @Override
     public ContentWriter end() {
-        throw new IllegalStateException("No open tag to close.");
+        throw new IllegalStateException("No open element to close.");
     }
 
     @Override
     public void close() {
         switch (state) {
             default: throw new IllegalStateException("No root element created.");
-            case OPEN: child.end();
+            case OPEN:
+                child.end();
+                state = FINISHED;
             case FINISHED: escapingWriter.close();
         }
     }
@@ -211,6 +231,7 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
 
         @Override public ContentWriter instruction(String name, String content) {
             toContent();
+            writer.write("<?" + name + " " + content + "?>");
             return this;
         }
 
@@ -247,7 +268,10 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
             return this;
         }
 
-        @Override public ContentWriter fragment(Consumer<Writer> consumer) {
+        @Override
+        public ContentWriter comment(String comment) {
+            toContent();
+            cdataWriter.write("<!-- " + comment + " -->");
             return this;
         }
 

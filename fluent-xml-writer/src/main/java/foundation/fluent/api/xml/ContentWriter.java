@@ -29,9 +29,6 @@
 
 package foundation.fluent.api.xml;
 
-import java.io.Writer;
-import java.util.function.Consumer;
-
 /**
  * Writer of the XML tag content.
  */
@@ -41,7 +38,7 @@ public interface ContentWriter {
      * Write XML processing instruction.
      * @param name Processing instruction name (e.g. xml-stylesheet).
      * @param content Content of the processing instruction tag.
-     * @return Writer to continue writing additional content after the processing instruction.
+     * @return Writer to continue writing additional content.
      */
     ContentWriter instruction(String name, String content);
 
@@ -63,18 +60,23 @@ public interface ContentWriter {
     /**
      * Write text content of the currently opened tag.
      * @param content Text content to be written.
-     * @return Writer to continue writing additional content after the processing instruction.
+     * @return Writer to continue writing additional content.
      */
     ContentWriter text(String content);
 
     /**
      * Write CDATA content of the currently opened tag.
      * @param content CDATA content to be written.
-     * @return Writer to continue writing additional content after the processing instruction.
+     * @return Writer to continue writing additional content.
      */
     ContentWriter cdata(String content);
 
-    ContentWriter fragment(Consumer<Writer> consumer);
+    /**
+     * Write XML comment into current position.
+     * @param comment Content of the comment. Only escape invalid characters.
+     * @return Writer to continue writing additional content.
+     */
+    ContentWriter comment(String comment);
 
     /**
      * End currently opened tag.

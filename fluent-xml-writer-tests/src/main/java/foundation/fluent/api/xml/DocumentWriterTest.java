@@ -39,11 +39,14 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.function.Consumer;
 
 import static foundation.fluent.api.xml.DocumentWriterConfig.config;
 import static foundation.fluent.api.xml.DocumentWriterFactory.*;
 import static foundation.fluent.api.xml.Requirement.requirement;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.testng.Assert.assertEquals;
 
 public class DocumentWriterTest {
@@ -57,13 +60,32 @@ public class DocumentWriterTest {
                 ),
 
                 requirement(
+                        w -> {
+                            w.version(1.0).text("\n").tag("element");
+                            w.text("\n");
+                        },
+                        "<?xml version='1.0'?>\n<element/>\n"
+                ),
+
+                requirement(
                         w -> w.version(1.0).tag("element").end(),
                         "<?xml version='1.0'?><element/>"
                 ),
 
                 requirement(
+                        w -> w.version(1.0).comment("Top level comment").tag("element").end(),
+                        "<?xml version='1.0'?><!-- Top level comment --><element/>"
+                ),
+
+                requirement(
                         w -> w.version(1.0).encoding("UTF-8").tag("element").close(),
                         "<?xml version='1.0' encoding='UTF-8'?><element/>"
+                ),
+
+
+                requirement(
+                        w -> w.version(1.0).encoding("UTF-8").tag("element").comment("Comment inside element").close(),
+                        "<?xml version='1.0' encoding='UTF-8'?><element><!-- Comment inside element --></element>"
                 ),
 
                 requirement(
@@ -87,8 +109,13 @@ public class DocumentWriterTest {
                 ),
 
                 requirement(
-                        w -> w.version(1.0).encoding("UTF-8").tag("tag").xmlns("fluent", "http://api.fluent.foundation/").tag("fluent", "api").close(),
-                        "<?xml version='1.0' encoding='UTF-8'?><tag xmlns:fluent='http://api.fluent.foundation/'><fluent:api/></tag>"
+                        w -> w.version(1.0).encoding("UTF-8").tag("fluent", "tag").xmlns("fluent", "http://api.fluent.foundation/").tag("fluent", "api").close(),
+                        "<?xml version='1.0' encoding='UTF-8'?><fluent:tag xmlns:fluent='http://api.fluent.foundation/'><fluent:api/></fluent:tag>"
+                ),
+
+                requirement(
+                        w -> w.version(1.0).instruction("xml-stylesheet", "href='style.css' type='text/css'").tag("root").instruction("php", "phpinfo()").close(),
+                        "<?xml version='1.0'?><?xml-stylesheet href='style.css' type='text/css'?><root><?php phpinfo()?></root>"
                 )
         };
     }
@@ -102,6 +129,20 @@ public class DocumentWriterTest {
         factory.setNamespaceAware(true);
         Document document = factory.newDocumentBuilder().parse(new ByteArrayInputStream(writer.toString().getBytes()));
         System.out.println(document);
+    }
+
+    @Test
+    public void testFlushOnDocumentWriter() throws IOException {
+        Writer writer = mock(Writer.class);
+        document(writer).version(1.0).flush();
+        verify(writer).flush();
+    }
+
+    @Test
+    public void testFlushOnContentWriter() throws IOException {
+        Writer writer = mock(Writer.class);
+        document(writer).version(1.0).tag("root").text("aha").flush();
+        verify(writer).flush();
     }
 
 }

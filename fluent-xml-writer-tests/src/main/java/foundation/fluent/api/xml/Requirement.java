@@ -42,7 +42,9 @@ import static java.util.Arrays.stream;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.joining;
 
-public class Requirement {
+public final class Requirement {
+
+    private Requirement() {}
 
     public static Object[] requirement(Consumer<DocumentWriter> actual, String expected) {
         return new Object[] {new DocumentWriterConsumer(actual, " should generate text"), expected};
@@ -57,8 +59,7 @@ public class Requirement {
         private final Consumer<DocumentWriter> actual;
         private final String expectation;
 
-
-        public DocumentWriterConsumer(Consumer<DocumentWriter> actual, String expectation) {
+        private DocumentWriterConsumer(Consumer<DocumentWriter> actual, String expectation) {
             this.actual = actual;
             this.expectation = expectation;
         }
@@ -108,7 +109,11 @@ public class Requirement {
                     default:
                         return content + invocations.stream().map(Objects::toString).collect(joining(";\nvar.", ";\nvar.", ";"));
                 }
+
             }
+
         }
+
     }
+
 }
