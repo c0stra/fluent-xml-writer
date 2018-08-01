@@ -31,6 +31,15 @@ package foundation.fluent.api.xml;
 
 import java.util.Arrays;
 
+/**
+ * Configuration of the document writer.
+ *
+ * It allows one to configure the writer using fluent API, so you specify the config simply like:
+ *
+ * config().singleQuoteValue().indentSpaces(4)
+ *
+ * The config is immutable, so every method creates new config instance with immutable parameters.
+ */
 public final class DocumentWriterConfig {
 
     public final char attrQuot;
@@ -45,26 +54,73 @@ public final class DocumentWriterConfig {
         this.attributeIndent = attributeIndent;
     }
 
+    /**
+     * Public factory method to create new config.
+     * @return New DocumentWriterConfig instance.
+     */
     public static DocumentWriterConfig config() {
         return new DocumentWriterConfig('"', "", "", " ");
     }
 
-    public DocumentWriterConfig quot(char attrQuot) {
-        return new DocumentWriterConfig(attrQuot, prettyPrint, indent, attributeIndent);
+    /**
+     * Quote attribute values using single quote (apostrophe): <'>
+     * @return Config with previous values and quoting character changed to apostrophe.
+     */
+    public DocumentWriterConfig singleQuoteValue() {
+        return new DocumentWriterConfig('\'', prettyPrint, indent, attributeIndent);
     }
 
+    /**
+     * Quote attribute values using double quote: <">
+     * This is the default for new config.
+     * @return Config with previous values and quoting character changed to double quote.
+     */
+    public DocumentWriterConfig doubleQuoteValue() {
+        return new DocumentWriterConfig('"', prettyPrint, indent, attributeIndent);
+    }
+
+    /**
+     * Set indentation to specified number of spaces.
+     * It enables pretty printing, so every tag starts at new line (default behavior is not to do so).
+     * Every tag or other content will also get indented by parent prefix + specified number of spaces.
+     * @param level Number of spaces to be used to indent.
+     * @return Config with previous values and pretty printing enabled with specified indentation level.
+     */
     public DocumentWriterConfig indentSpaces(int level) {
         char[] indent = new char[level];
         Arrays.fill(indent, ' ');
         return new DocumentWriterConfig(attrQuot, "\n", new String(indent), attributeIndent);
     }
 
+    /**
+     * Set indentation to specified number of tabs.
+     * It enables pretty printing, so every tag starts at new line (default behavior is not to do so).
+     * Every tag or other content will also get indented by parent prefix + specified number of tabs.
+     * @param level Number of tabs to be used to indent.
+     * @return Config with previous values and pretty printing enabled with specified indentation level.
+     */
     public DocumentWriterConfig indentTabs(int level) {
         char[] indent = new char[level];
         Arrays.fill(indent, '\t');
         return new DocumentWriterConfig(attrQuot, "\n", new String(indent), attributeIndent);
     }
 
+    /**
+     * Set indentation to tabs.
+     * It enables pretty printing, so every tag starts at new line (default behavior is not to do so).
+     * Every tag or other content will also get indented by parent prefix + additional tab.
+     * @return Config with previous values and pretty printing enabled with specified indentation.
+     */
+    public DocumentWriterConfig indentTabs() {
+        return indentTabs(1);
+    }
+
+    /**
+     * Set indentation for attributes.
+     * It's not yet working, and may change similarly to content indentation (only set level).
+     * @param attributeIndent
+     * @return Config with previous values and attribute indentation set.
+     */
     public DocumentWriterConfig indentAttribute(String attributeIndent) {
         return new DocumentWriterConfig(attrQuot, prettyPrint, indent, attributeIndent);
     }

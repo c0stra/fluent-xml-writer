@@ -104,7 +104,7 @@ public class DocumentWriterIndentationTest {
     @Test(dataProvider = "data")
     public void testThat(Consumer<DocumentWriter> actual, String expected) throws ParserConfigurationException, IOException, SAXException {
         StringWriter writer = new StringWriter();
-        actual.accept(document(writer, config().quot('\'').indentSpaces(4)));
+        actual.accept(document(writer, config().singleQuoteValue().indentSpaces(4)));
         assertEquals(writer.toString(), expected);
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);

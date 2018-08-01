@@ -123,7 +123,7 @@ public class DocumentWriterTest {
     @Test(dataProvider = "data")
     public void testThat(Consumer<DocumentWriter> actual, String expected) throws ParserConfigurationException, IOException, SAXException {
         StringWriter writer = new StringWriter();
-        actual.accept(document(writer, config().quot('\'')));
+        actual.accept(document(writer, config().singleQuoteValue()));
         assertEquals(writer.toString(), expected);
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);

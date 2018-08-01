@@ -91,7 +91,7 @@ public class DocumentWriterErrorsTest {
                 @Override public void write(char[] cbuf, int off, int len) { }
                 @Override public void flush() { }
                 @Override public void close() { }
-            }, config().quot('\'')));
+            }, config().singleQuoteValue()));
             throw new AssertionError("IllegalStateException with message '" + expected + "' expected, but no exception thrown.");
         } catch (IllegalStateException e) {
             assertEquals(e.getMessage(), expected);
