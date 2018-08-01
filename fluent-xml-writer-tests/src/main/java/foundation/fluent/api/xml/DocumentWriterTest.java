@@ -116,6 +116,11 @@ public class DocumentWriterTest {
                 requirement(
                         w -> w.version(1.0).instruction("xml-stylesheet", "href='style.css' type='text/css'").tag("root").instruction("php", "phpinfo()").close(),
                         "<?xml version='1.0'?><?xml-stylesheet href='style.css' type='text/css'?><root><?php phpinfo()?></root>"
+                ),
+
+                requirement(
+                        w -> w.doctype("html").tag("html").close(),
+                        "<!DOCTYPE html><html/>"
                 )
         };
     }

@@ -42,12 +42,12 @@ import java.util.Arrays;
  */
 public final class DocumentWriterConfig {
 
-    public final char attrQuot;
+    public final String attrQuot;
     public final String prettyPrint;
     public final String indent;
     public final String attributeIndent;
 
-    private DocumentWriterConfig(char attrQuot, String prettyPrint, String indent, String attributeIndent) {
+    private DocumentWriterConfig(String attrQuot, String prettyPrint, String indent, String attributeIndent) {
         this.attrQuot = attrQuot;
         this.prettyPrint = prettyPrint;
         this.indent = indent;
@@ -59,7 +59,7 @@ public final class DocumentWriterConfig {
      * @return New DocumentWriterConfig instance.
      */
     public static DocumentWriterConfig config() {
-        return new DocumentWriterConfig('"', "", "", " ");
+        return new DocumentWriterConfig("\"", "", "", " ");
     }
 
     /**
@@ -67,7 +67,7 @@ public final class DocumentWriterConfig {
      * @return Config with previous values and quoting character changed to apostrophe.
      */
     public DocumentWriterConfig singleQuoteValue() {
-        return new DocumentWriterConfig('\'', prettyPrint, indent, attributeIndent);
+        return new DocumentWriterConfig("'", prettyPrint, indent, attributeIndent);
     }
 
     /**
@@ -76,7 +76,7 @@ public final class DocumentWriterConfig {
      * @return Config with previous values and quoting character changed to double quote.
      */
     public DocumentWriterConfig doubleQuoteValue() {
-        return new DocumentWriterConfig('"', prettyPrint, indent, attributeIndent);
+        return new DocumentWriterConfig("\"", prettyPrint, indent, attributeIndent);
     }
 
     /**

@@ -43,9 +43,12 @@ import static foundation.fluent.api.xml.impl.DocumentWriterImpl.ElementState.*;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
-public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, Supplier<ContentWriter> {
+public final class DocumentWriterImpl implements
+        DocumentWriter.XmlSpecWriter,
+        DocumentWriter.DoctypeWriter,
+        Supplier<ContentWriter> {
 
-    enum DocumentState {EMPTY, SPEC, PREFIX, OPEN, FINISHED}
+    enum DocumentState {EMPTY, SPEC, DOCTYPE, PREFIX, OPEN, FINISHED}
     enum ElementState {OPENING, CONTENT, CDATA, CLOSED}
 
     private final DocumentWriterConfig config;
@@ -84,7 +87,8 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
 
     private void toContent() {
         switch (state) {
-            case SPEC: writer.write("?>");
+            case SPEC: writer.write('?');
+            case DOCTYPE: writer.write('>');
             case EMPTY: state = PREFIX;
             case PREFIX: return;
             case OPEN:
@@ -98,6 +102,47 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
     @Override
     public XmlSpecWriter version(String version) {
         return set("version", version);
+    }
+
+    @Override
+    public DoctypeWriter doctype(String name) {
+        switch (state) {
+            case SPEC:
+                writer.write("?><!DOCTYPE " + name);
+                break;
+            case PREFIX:
+            case EMPTY:
+                writer.write("<!DOCTYPE " + name);
+                break;
+            default:
+                throw new IllegalStateException("DOCTYPE specification not allowed here.");
+        }
+        state = DOCTYPE;
+        return this;
+    }
+
+    @Override
+    public DoctypeWriter publicDtd(String uri, String dtd) {
+        if(state != DOCTYPE) {
+            throw new IllegalStateException("Not in DOCTYPE definition.");
+        }
+        writer.write(" PUBLIC " + config.attrQuot);
+        escapingWriter.write(uri);
+        writer.write(config.attrQuot + ' ' + config.attrQuot);
+        escapingWriter.write(dtd);
+        writer.write(config.attrQuot);
+        return this;
+    }
+
+    @Override
+    public DoctypeWriter systemDtd(String dtd) {
+        if(state != DOCTYPE) {
+            throw new IllegalStateException("Not in DOCTYPE definition.");
+        }
+        writer.write(" SYSTEM " + config.attrQuot);
+        escapingWriter.write(dtd);
+        writer.write(config.attrQuot);
+        return this;
     }
 
     @Override
@@ -127,6 +172,9 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
             case SPEC:
                 writer.write("?>" + config.prettyPrint + '<' + tag);
                 break;
+            case DOCTYPE:
+                writer.write(">" + config.prettyPrint + '<' + tag);
+                break;
             case PREFIX:
                 writer.write(config.prettyPrint + '<' + tag);
                 break;
@@ -154,15 +202,19 @@ public final class DocumentWriterImpl implements DocumentWriter.XmlSpecWriter, S
         }
         switch (state) {
             case SPEC:
-                writer.write("?>");
+                writer.write("?>" + content);
+                state = PREFIX;
+                break;
+            case DOCTYPE:
+                writer.write(">" + content);
                 state = PREFIX;
                 break;
             case OPEN:
                 child.end();
+                writer.write(content);
                 state = FINISHED;
                 break;
         }
-        writer.write(content);
         return this;
     }
 

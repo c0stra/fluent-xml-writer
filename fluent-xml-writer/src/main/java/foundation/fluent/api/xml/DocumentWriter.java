@@ -50,6 +50,19 @@ public interface DocumentWriter extends ContentWriter {
         return version(String.valueOf(version));
     }
 
+    /**
+     * Write XML document type to associate document with DTD, ot set it as well known.
+     * @param name Document type name.
+     * @return
+     */
+    DoctypeWriter doctype(String name);
+
+    /**
+     * Flush the content using underlying writer.
+     * @return this
+     */
+    DocumentWriter flush();
+
     interface XmlSpecWriter extends DocumentWriter {
 
         /**
@@ -61,10 +74,12 @@ public interface DocumentWriter extends ContentWriter {
 
     }
 
-    /**
-     * Flush the content using underlying writer.
-     * @return this
-     */
-    DocumentWriter flush();
+    interface DoctypeWriter extends DocumentWriter {
+
+        DoctypeWriter publicDtd(String uri, String dtd);
+
+        DoctypeWriter systemDtd(String dtd);
+
+    }
 
 }
