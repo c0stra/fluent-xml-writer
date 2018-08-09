@@ -15,8 +15,7 @@
 
     <name>Fluent XML writer project</name>
     <description>
-        Module provides annotation based Java language extensions, that helps identifying missing methods needed to end
-        a chain (sentence) using fluent API already at compile time.
+        Fluent API for writing XML to an output stream.
     </description>
 
     <url>https://github.com/c0stra/fluent-xml-writer/wiki/fluent-xml-writer</url>

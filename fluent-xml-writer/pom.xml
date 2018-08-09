@@ -11,5 +11,12 @@
 
     <artifactId>fluent-xml-writer</artifactId>
 
+    <description>
+        Fluent hierarchical XML writer, allowing to generate XML file (or other output stream) fluently:
+
+        document(output).version(1.0).tag("root").text("Hello").end().close();
+
+        It is immediately streaming to the output stream. Not holding anything in memory.
+    </description>
 
 </project>
