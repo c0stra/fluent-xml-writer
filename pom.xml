@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-xml-writer-project</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <modules>
         <module>fluent-xml-writer</module>
         <module>fluent-xml-writer-tests</module>
@@ -40,7 +38,7 @@
         <connection>scm:git:git://github.com/c0stra/fluent-xml-writer.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/c0stra/fluent-xml-writer.git</developerConnection>
         <url>https://github.com/c0stra/fluent-xml-writer</url>
-        <tag>HEAD</tag>
+        <tag>fluent-xml-writer-1.0</tag>
     </scm>
 
     <properties>
