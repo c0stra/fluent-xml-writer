@@ -5,7 +5,7 @@
     <groupId>foundation.fluent.api</groupId>
     <artifactId>fluent-xml-writer-project</artifactId>
     <packaging>pom</packaging>
-    <version>1.0</version>
+    <version>1.1-SNAPSHOT</version>
     <modules>
         <module>fluent-xml-writer</module>
         <module>fluent-xml-writer-tests</module>
@@ -38,7 +38,7 @@
         <connection>scm:git:git://github.com/c0stra/fluent-xml-writer.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/c0stra/fluent-xml-writer.git</developerConnection>
         <url>https://github.com/c0stra/fluent-xml-writer</url>
-        <tag>fluent-xml-writer-1.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <properties>
