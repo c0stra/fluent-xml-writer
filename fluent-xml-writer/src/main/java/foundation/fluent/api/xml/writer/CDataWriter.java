@@ -47,7 +47,7 @@ public class CDataWriter extends FilterWriter {
      * Create a new filtered writer.
      *
      * @param out a Writer object to provide the underlying stream.
-     * @param operator
+     * @param operator Operator to transform invalid characters.
      * @throws NullPointerException if <code>out</code> is <code>null</code>
      */
     public CDataWriter(Writer out, IntUnaryOperator operator) {

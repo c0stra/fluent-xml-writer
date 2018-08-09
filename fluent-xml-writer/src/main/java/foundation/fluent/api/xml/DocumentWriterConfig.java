@@ -63,7 +63,7 @@ public final class DocumentWriterConfig {
     }
 
     /**
-     * Quote attribute values using single quote (apostrophe): <'>
+     * Quote attribute values using single quote (apostrophe): `'`
      * @return Config with previous values and quoting character changed to apostrophe.
      */
     public DocumentWriterConfig singleQuoteValue() {
@@ -71,7 +71,7 @@ public final class DocumentWriterConfig {
     }
 
     /**
-     * Quote attribute values using double quote: <">
+     * Quote attribute values using double quote: `"`
      * This is the default for new config.
      * @return Config with previous values and quoting character changed to double quote.
      */
@@ -118,10 +118,10 @@ public final class DocumentWriterConfig {
     /**
      * Set indentation for attributes.
      * It's not yet working, and may change similarly to content indentation (only set level).
-     * @param attributeIndent
+     * @param level Level of additional attribute indentation.
      * @return Config with previous values and attribute indentation set.
      */
-    public DocumentWriterConfig indentAttribute(String attributeIndent) {
+    public DocumentWriterConfig indentAttribute(int level) {
         return new DocumentWriterConfig(attrQuot, prettyPrint, indent, attributeIndent);
     }
 
